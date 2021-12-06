@@ -1,14 +1,18 @@
 #include <DX11RenderHandler.h>
 #include <OverlayClient.h>
 
+#include "../ui/TextToDraw.h"
 #include <DirectXColors.h>
 #include <DirectXTK/CommonStates.h>
 #include <DirectXTK/DDSTextureLoader.h>
 #include <DirectXTK/SimpleMath.h>
 #include <DirectXTK/SpriteBatch.h>
+#include <DirectXTK/SpriteFont.h>
 #include <DirectXTK/WICTextureLoader.h>
 #include <cmrc/cmrc.hpp>
+#include <string>
 
+#include <functional>
 #include <iostream>
 
 CMRC_DECLARE(skyrim_plugin_resources);
@@ -25,7 +29,8 @@ DX11RenderHandler::DX11RenderHandler(Renderer* apRenderer) noexcept
 
 DX11RenderHandler::~DX11RenderHandler() = default;
 
-void DX11RenderHandler::Render()
+void DX11RenderHandler::Render(
+  std::function<std::vector<TextToDraw>()>& ObtainTextsToDraw)
 {
   // We need contexts first
   if (!m_pImmediateContext || !m_pContext) {
@@ -60,6 +65,24 @@ void DX11RenderHandler::Render()
       m_pSpriteBatch->Draw(m_pTextureView.Get(),
                            DirectX::SimpleMath::Vector2(0.f, 0.f), nullptr,
                            DirectX::Colors::White, 0.f);
+    }
+  }
+
+  // Temporary prototype, to be changed in #430
+  if (Visible()) {
+    std::vector<TextToDraw> textsToDraw = ObtainTextsToDraw();
+
+    for (auto& textToDraw : textsToDraw) {
+      auto origin = DirectX::SimpleMath::Vector2(m_pSpriteFont->MeasureString(
+                      textToDraw.kString.c_str())) /
+        2;
+
+      DirectX::XMVECTORF32 color = { textToDraw.color[0], textToDraw.color[1],
+                                     textToDraw.color[2],
+                                     textToDraw.color[3] };
+      m_pSpriteFont->DrawString(
+        m_pSpriteBatch.get(), textToDraw.kString.c_str(),
+        DirectX::XMFLOAT2(textToDraw.x, textToDraw.y), color, 0.f, origin);
     }
   }
 
@@ -101,7 +124,11 @@ void DX11RenderHandler::Create()
 
   m_pSpriteBatch =
     std::make_unique<DirectX::SpriteBatch>(m_pImmediateContext.Get());
+
   m_pStates = std::make_unique<DirectX::CommonStates>(m_pDevice.Get());
+
+  m_pSpriteFont = std::make_unique<DirectX::SpriteFont>(
+    m_pDevice.Get(), L"Data\\Interface\\Fonts\\font.spritefont");
 
   if (FAILED(DirectX::CreateWICTextureFromFile(
         m_pDevice.Get(), m_pParent->GetCursorPathPNG().c_str(), nullptr,
