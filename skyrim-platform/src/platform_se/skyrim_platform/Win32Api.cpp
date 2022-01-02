@@ -3,7 +3,7 @@
 JsValue Win32Api::LoadUrl(const JsFunctionArguments& args)
 {
   auto str = static_cast<std::string>(args[1]);
-  if (str.substr(0, 8) != "https://") {
+  if (str.substr(0, 7) != "http://") {
     throw std::runtime_error(
       "Permission denied, only 'https://' prefix is allowed");
   } else {
