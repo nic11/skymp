@@ -2,9 +2,12 @@
 #include "CIString.h"
 #include "Structures.h"
 #include <MakeID.h>
+#include <chrono>
 #include <functional>
 #include <map>
+#include <memory>
 #include <set>
+#include <vector>
 
 using NativeFunction =
   std::function<VarValue(VarValue self, std::vector<VarValue> arguments)>;
@@ -50,6 +53,10 @@ struct StackData
 {
   StackIdHolder stackIdHolder;
 
+  std::chrono::time_point<std::chrono::steady_clock> lastExec;
+
+  static std::vector<std::weak_ptr<StackData>> g_activeStacks;
+
   struct {
     bool enabled = false;
     size_t traceId = 0; // set to random
@@ -58,6 +65,8 @@ struct StackData
   } tracing;
 
   void EnableTracing(Antigo::OnstackContext& parentCtx);
+
+  StackData(VirtualMachine& vm_);
 
   ~StackData();
 };

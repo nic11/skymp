@@ -6,6 +6,7 @@
 #include <cassert>
 #include <fmt/format.h>
 #include <limits>
+#include <memory>
 #include <random>
 #include <spdlog/spdlog.h>
 #include <sstream>
@@ -27,6 +28,8 @@ void StackData::EnableTracing(Antigo::OnstackContext& parentCtx) {
   // tracing.traceId = std::chrono::steady_clock::now().time_since_epoch().count();
   tracing.traceId = dist(gen);
 }
+
+StackData::StackData(VirtualMachine& vm_): stackIdHolder(vm_) {}
 
 StackData::~StackData() {
   if (tracing.enabled) {
@@ -240,8 +243,7 @@ void VirtualMachine::SendEvent(std::shared_ptr<IGameObject> self,
       eventName, scriptInstance->GetActiveStateName());
     if (fn.valid) {
       ctx.AddMessage("valid");
-      std::shared_ptr<StackData> stackData;
-      stackData.reset(new StackData{ StackIdHolder{ *this } });
+      auto stackData = std::make_shared<StackData>(*this);
       if (strcmp(eventName, "OnHit") == 0) {
         stackData->EnableTracing(ctx);
       }
@@ -269,8 +271,7 @@ void VirtualMachine::SendEvent(ActivePexInstance* instance,
   auto fn =
     instance->GetFunctionByName(eventName, instance->GetActiveStateName());
   if (fn.valid) {
-    std::shared_ptr<StackData> stackData;
-    stackData.reset(new StackData{ StackIdHolder{ *this } });
+    auto stackData = std::make_shared<StackData>(*this);
     instance->StartFunction(fn, const_cast<std::vector<VarValue>&>(arguments),
                             stackData);
   }
@@ -340,7 +341,7 @@ VarValue VirtualMachine::CallMethod(
   g.Arm();
 
   if (!stackData) {
-    stackData.reset(new StackData{ StackIdHolder{ *this } });
+    stackData = std::make_shared<StackData>(*this);
   }
 
   if (!selfObj) {
@@ -422,7 +423,7 @@ VarValue VirtualMachine::CallStatic(const std::string& className,
   });
 
   if (!stackData) {
-    stackData.reset(new StackData{ StackIdHolder{ *this } });
+    stackData = std::make_shared<StackData>(*this);
   }
 
   VarValue result = VarValue::None();

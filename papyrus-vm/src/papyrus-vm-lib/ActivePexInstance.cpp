@@ -7,6 +7,7 @@
 #include "papyrus-vm/VirtualMachine.h"
 #include <algorithm>
 #include <cctype> // tolower
+#include <chrono>
 #include <exception>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -951,8 +952,8 @@ VarValue ActivePexInstance::ExecuteAll(
   ExecutionContext& ctx, std::optional<VarValue> previousCallResult)
 {
   ANTIGO_CONTEXT_INIT(agctx);
-  agctx.AddMessage("next: stack id, line");
-  agctx.AddUnsigned(ctx.stackData->stackIdHolder.GetStackId());
+
+  agctx.AddMessage("next: line");
   agctx.AddUnsigned(ctx.line);
   auto g = agctx.AddLambdaWithRef([&ctx]() {
     std::stringstream ss;
@@ -971,11 +972,27 @@ VarValue ActivePexInstance::ExecuteAll(
   });
   g.Arm();
 
+  if (ctx.stackData == nullptr) {
+    spdlog::error("ActivePexInstance::ExecuteAll: stackData is null\n{}", agctx.Resolve().ToString());
+    return VarValue::None();
+  }
+
+  agctx.AddMessage("next: stack id");
+  agctx.AddUnsigned(ctx.stackData->stackIdHolder.GetStackId());
+
   auto pipex = sourcePex.fn(); // XXX ???
 
   if (pipex != nullptr && PexNameIsTraced(pipex->source)) {
     ctx.stackData->EnableTracing(agctx);
   }
+
+  struct Defer {
+    ExecutionContext& ctx;
+
+    ~Defer() {
+      ctx.stackData->lastExec = std::chrono::steady_clock::now();
+    }
+  } defer{ctx};
 
   bool tracingStartedHere = false;
   if (ctx.stackData->tracing.enabled && !agctx.IsLoggingInnerExecution()) {
