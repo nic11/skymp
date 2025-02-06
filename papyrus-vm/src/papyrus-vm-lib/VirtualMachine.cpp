@@ -49,6 +49,8 @@ std::shared_ptr<StackData> StackData::Create(VirtualMachine& vm_) {
   return p;
 }
 
+StackData::StackData(VirtualMachine& vm_, InternalToken): stackIdHolder(vm_) {}
+
 StackData::~StackData() {
   if (tracing.enabled) {
     spdlog::info("TRACING PAPYRUS STACK {}-{}: DESTRUCTOR", stackIdHolder.GetStackId(), tracing.traceId);
