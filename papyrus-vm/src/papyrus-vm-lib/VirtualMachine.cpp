@@ -29,7 +29,25 @@ void StackData::EnableTracing(Antigo::OnstackContext& parentCtx) {
   tracing.traceId = dist(gen);
 }
 
-StackData::StackData(VirtualMachine& vm_): stackIdHolder(vm_) {}
+std::vector<std::weak_ptr<StackData>> StackData::activeStacks{};
+
+std::shared_ptr<StackData> StackData::Create(VirtualMachine& vm_) {
+  auto p = std::make_shared<StackData>(vm_, InternalToken{});
+  if (activeStacks.empty()) {
+    activeStacks.resize(g_maxStackId);
+    size_t id = p->stackIdHolder.GetStackId();
+    if (id >= activeStacks.size()) {
+      spdlog::error("bad stack id: {} >= {}", id, activeStacks.size());
+      return p;
+    }
+    auto& ptrInArr = activeStacks[id];
+    if (ptrInArr.use_count() != 0) {
+      spdlog::error("duplicate stack id: {}, old use count", id, ptrInArr.use_count());
+    }
+    ptrInArr = p;
+  }
+  return p;
+}
 
 StackData::~StackData() {
   if (tracing.enabled) {
@@ -243,7 +261,7 @@ void VirtualMachine::SendEvent(std::shared_ptr<IGameObject> self,
       eventName, scriptInstance->GetActiveStateName());
     if (fn.valid) {
       ctx.AddMessage("valid");
-      auto stackData = std::make_shared<StackData>(*this);
+      auto stackData = StackData::Create(*this);
       if (strcmp(eventName, "OnHit") == 0) {
         stackData->EnableTracing(ctx);
       }
@@ -271,7 +289,7 @@ void VirtualMachine::SendEvent(ActivePexInstance* instance,
   auto fn =
     instance->GetFunctionByName(eventName, instance->GetActiveStateName());
   if (fn.valid) {
-    auto stackData = std::make_shared<StackData>(*this);
+    auto stackData = StackData::Create(*this);
     instance->StartFunction(fn, const_cast<std::vector<VarValue>&>(arguments),
                             stackData);
   }
@@ -341,7 +359,7 @@ VarValue VirtualMachine::CallMethod(
   g.Arm();
 
   if (!stackData) {
-    stackData = std::make_shared<StackData>(*this);
+    stackData = StackData::Create(*this);
   }
 
   if (!selfObj) {
@@ -423,7 +441,7 @@ VarValue VirtualMachine::CallStatic(const std::string& className,
   });
 
   if (!stackData) {
-    stackData = std::make_shared<StackData>(*this);
+    stackData = StackData::Create(*this);
   }
 
   VarValue result = VarValue::None();

@@ -55,7 +55,7 @@ struct StackData
 
   std::chrono::time_point<std::chrono::steady_clock> lastExec;
 
-  static std::vector<std::weak_ptr<StackData>> g_activeStacks;
+  static std::vector<std::weak_ptr<StackData>> activeStacks;
 
   struct {
     bool enabled = false;
@@ -66,9 +66,15 @@ struct StackData
 
   void EnableTracing(Antigo::OnstackContext& parentCtx);
 
-  StackData(VirtualMachine& vm_);
+  static std::shared_ptr<StackData> Create(VirtualMachine& vm_);
 
   ~StackData();
+
+private:
+  struct InternalToken {};
+
+public:
+  StackData(VirtualMachine& vm_, InternalToken);
 };
 
 struct VmExceptionInfo
