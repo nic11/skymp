@@ -1,5 +1,6 @@
 #pragma once
 #include "NetworkingInterface.h"
+#include "antigo/Context.h"
 #include <MakeID.h>
 #include <fmt/format.h>
 #include <limits>
@@ -93,6 +94,8 @@ private:
                            Networking::PacketType packetType,
                            Networking::PacketData data, size_t length)
   {
+    ANTIGO_CONTEXT_INIT(ctx);
+
     auto this_ = reinterpret_cast<ServerCombined*>(state);
 
     const auto serverIdx = this_->st.serverIdx;
@@ -103,7 +106,7 @@ private:
     switch (packetType) {
       case Networking::PacketType::ServerSideUserConnect: {
 
-        id = this_->CreateId();
+        id = this_->CreateId(); // XXX
 
         if (combinedIdByReal.size() <= userId) {
           combinedIdByReal.resize(static_cast<size_t>(userId) + 1,
@@ -119,9 +122,10 @@ private:
 
         break;
       }
+      // XXX no conn reset?
       case Networking::PacketType::ServerSideUserDisconnect:
         id = combinedIdByReal[userId];
-        this_->FreeId(id);
+        this_->FreeId(id); // XXX
         combinedIdByReal[userId] = Networking::InvalidUserId;
         this_->realIdByCombined[id] = { -1, Networking::InvalidUserId };
         break;

@@ -899,13 +899,14 @@ ActivePexInstance::TransformInstructions(
 namespace {
 void TracingInit(std::shared_ptr<StackData> stackData, Antigo::OnstackContext& agctxParent) {
   size_t prevSize = stackData->tracing.msgs.size();
-  // size_t start = 0;
-  // if (prevSize > 5) {
-  //   start = prevSize - 5;
-  // }
-  if (prevSize > 5) {
-    stackData->tracing.msgs.clear();
+  auto startIt = stackData->tracing.msgs.end();
+  for (size_t i = 0; i < 5; ++i) {
+    if (startIt != stackData->tracing.msgs.begin()) {
+      --startIt;
+    }
   }
+  std::vector<std::string> newMsgs(startIt, stackData->tracing.msgs.end());
+  stackData->tracing.msgs = std::move(newMsgs);
   stackData->tracing.msgs.push_back(fmt::format("{} msgs before", prevSize));
 
   spdlog::info("TRACING PAPYRUS STACK {}-{}: TracingInit (detected enable)", stackData->stackIdHolder.GetStackId(), stackData->tracing.traceId);

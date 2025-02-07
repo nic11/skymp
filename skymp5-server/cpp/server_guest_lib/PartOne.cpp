@@ -139,6 +139,8 @@ uint32_t PartOne::CreateActor(uint32_t formId, const NiPoint3& pos,
 
 void PartOne::SetUserActor(Networking::UserId userId, uint32_t actorFormId)
 {
+  ANTIGO_CONTEXT_INIT(ctx);
+
   serverState.EnsureUserExists(userId);
 
   if (actorFormId > 0) {

@@ -27,6 +27,7 @@ void StackData::EnableTracing(Antigo::OnstackContext& parentCtx) {
   tracing.enabled = true;
   // tracing.traceId = std::chrono::steady_clock::now().time_since_epoch().count();
   tracing.traceId = dist(gen);
+  spdlog::info("TRACING PAPYRUS STACK {}-{}: enabled", stackIdHolder.GetStackId(), tracing.traceId);
 }
 
 std::vector<std::weak_ptr<StackData>> StackData::activeStacks{};
