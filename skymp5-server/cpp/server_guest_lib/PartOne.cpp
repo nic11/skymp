@@ -141,6 +141,10 @@ void PartOne::SetUserActor(Networking::UserId userId, uint32_t actorFormId)
 {
   ANTIGO_CONTEXT_INIT(ctx);
 
+  ctx.AddMessage("next: userId, actorFormId");
+  ctx.AddUnsigned(userId);
+  ctx.AddUnsigned(actorFormId);
+
   serverState.EnsureUserExists(userId);
 
   if (actorFormId > 0) {
@@ -185,6 +189,8 @@ void PartOne::SetUserActor(Networking::UserId userId, uint32_t actorFormId)
   } else {
     serverState.actorsMap.Erase(userId);
   }
+
+  ctx.Orphan();
 }
 
 uint32_t PartOne::GetUserActor(Networking::UserId userId)
