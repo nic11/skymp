@@ -96,17 +96,22 @@ private:
   {
     ANTIGO_CONTEXT_INIT(ctx);
 
+    ctx.AddMessage("next: base server userId, serverIdx");
+
     auto this_ = reinterpret_cast<ServerCombined*>(state);
 
     const auto serverIdx = this_->st.serverIdx;
+    ctx.AddUnsigned(serverIdx);
 
     auto& combinedIdByReal = this_->childData[serverIdx].combinedIdByReal;
     Networking::UserId id = Networking::InvalidUserId;
 
     switch (packetType) {
       case Networking::PacketType::ServerSideUserConnect: {
+        ctx.AddMessage("Networking::PacketType::ServerSideUserConnect, next: combined user id (created)");
 
-        id = this_->CreateId(); // XXX
+        id = this_->CreateId();
+        ctx.AddUnsigned(id);
 
         if (combinedIdByReal.size() <= userId) {
           combinedIdByReal.resize(static_cast<size_t>(userId) + 1,
@@ -122,17 +127,26 @@ private:
 
         break;
       }
-      // XXX no conn reset?
       case Networking::PacketType::ServerSideUserDisconnect:
+        ctx.AddMessage("Networking::PacketType::ServerSideUserDisconnect, next: combined user id (found) to free");
+
         id = combinedIdByReal[userId];
-        this_->FreeId(id); // XXX
+        ctx.AddUnsigned(id);
+
+        this_->FreeId(id);
         combinedIdByReal[userId] = Networking::InvalidUserId;
         this_->realIdByCombined[id] = { -1, Networking::InvalidUserId };
         break;
       case Networking::PacketType::Message:
+        ctx.AddMessage("Networking::PacketType::Message, next: combined user id (found)");
+
         id = combinedIdByReal[userId];
+        ctx.AddUnsigned(id);
+
         break;
       default:
+        ctx.AddMessage("unhandled packet type: next");
+        ctx.AddUnsigned(static_cast<uint64_t>(packetType));
         break;
     }
 
