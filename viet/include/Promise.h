@@ -1,4 +1,7 @@
 #pragma once
+#ifdef WITH_ANTIGO
+#include "antigo/Context.h"
+#endif
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -112,6 +115,17 @@ public:
   }
 
   operator AnyPromise() { return AnyPromise(*this); }
+
+#ifdef WITH_ANTIGO
+  ~Promise() {
+    ANTIGO_CONTEXT_INIT(ctx);
+
+    if (pImpl->pending) {
+      ctx.AddMessage("PROMISE GONE");
+      ctx.Orphan();
+    }
+  }
+#endif
 
 private:
   struct Impl

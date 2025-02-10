@@ -183,7 +183,8 @@ bool ActivePexInstance::EnsureCallResultIsSynchronous(
     return true;
   }
 
-  agctx.AddMessage("call result is not a promise (fixed 20250206)");
+  // agctx.AddMessage("call result is not a promise (fixed 20250206)");
+  agctx.AddMessage("call result is a promise (fixed 20250210)");
 
   std::optional<Antigo::ResolvedContext> agctxResolved;
   if (ctx->stackData->tracing.enabled) {
