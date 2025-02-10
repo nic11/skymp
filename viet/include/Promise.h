@@ -1,7 +1,7 @@
 #pragma once
-// #ifdef WITH_ANTIGO
+#ifdef WITH_ANTIGO
 #include "antigo/Context.h"
-// #endif
+#endif
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -116,7 +116,7 @@ public:
 
   operator AnyPromise() { return AnyPromise(*this); }
 
-// #ifdef WITH_ANTIGO
+#ifdef WITH_ANTIGO
   ~Promise() {
     ANTIGO_CONTEXT_INIT(ctx);
 
@@ -125,7 +125,7 @@ public:
       ctx.Orphan();
     }
   }
-// #endif
+#endif
 
 private:
   struct Impl
