@@ -1,5 +1,7 @@
 #pragma once
 #ifdef WITH_ANTIGO
+#include <exception>
+#include <iostream>
 #include "antigo/Context.h"
 #endif
 #include <functional>
@@ -121,8 +123,12 @@ public:
     ANTIGO_CONTEXT_INIT(ctx);
 
     if (pImpl->pending) {
-      ctx.AddMessage("PROMISE GONE");
-      ctx.Orphan();
+      try {
+        ctx.AddMessage("PROMISE GONE");
+        ctx.Orphan();
+      } catch (const std::exception& e) {
+        std::cerr << "PROMISE GONE EXCEPTION " << e.what() << "\n";
+      }
     }
   }
 #endif
