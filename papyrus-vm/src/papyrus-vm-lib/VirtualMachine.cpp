@@ -56,13 +56,19 @@ StackData::StackData(VirtualMachine& vm_, InternalToken): stackIdHolder(vm_) {}
 StackData::~StackData() {
   ANTIGO_CONTEXT_INIT(ctx);
   if (tracing.enabled) {
+    std::string last;
+    if (tracing.msgs.empty()) {
+      last = "(empty)";
+    } else {
+      last = tracing.msgs.back();
+    }
     std::string resolved;
     try {
       resolved = ctx.Resolve().ToString();
     } catch (const std::exception& e) {
       resolved = std::string{"unexpected error during resolving: "} + e.what();
     }
-    spdlog::info("TRACING PAPYRUS STACK {}-{}: DESTRUCTOR\n{}", stackIdHolder.GetStackId(), tracing.traceId, resolved);
+    spdlog::info("TRACING PAPYRUS STACK {}-{}: DESTRUCTOR (last: {})\n{}", stackIdHolder.GetStackId(), tracing.traceId, last, resolved);
   }
 }
 
