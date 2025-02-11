@@ -946,6 +946,9 @@ bool PexNameIsTraced(const std::string& pexName) {
   if (pexName.starts_with("SweetMineIngot")) { // smith
     return true;
   }
+  if (pexName.starts_with("SweetMineClay")) {
+    return true;
+  }
   return false;
 }
 } // namespace
