@@ -118,21 +118,6 @@ public:
 
   operator AnyPromise() { return AnyPromise(*this); }
 
-#ifdef WITH_ANTIGO
-  ~Promise() {
-    ANTIGO_CONTEXT_INIT(ctx);
-
-    if (pImpl->pending) {
-      try {
-        ctx.AddMessage("PROMISE GONE");
-        ctx.Orphan();
-      } catch (const std::exception& e) {
-        std::cerr << "PROMISE GONE EXCEPTION " << e.what() << "\n";
-      }
-    }
-  }
-#endif
-
 private:
   struct Impl
   {
@@ -141,6 +126,21 @@ private:
       throw std::runtime_error("Unhandled promise rejection");
     };
     bool pending = true;
+
+#ifdef WITH_ANTIGO
+    ~Impl() {
+      ANTIGO_CONTEXT_INIT(ctx);
+
+      if (pending) {
+        try {
+          ctx.AddMessage("PROMISE GONE");
+          ctx.Orphan();
+        } catch (const std::exception& e) {
+          std::cerr << "PROMISE GONE EXCEPTION " << e.what() << "\n";
+        }
+      }
+    }
+#endif
   };
 
   std::shared_ptr<Impl> pImpl = std::make_shared<Impl>();
