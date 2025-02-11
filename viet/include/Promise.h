@@ -1,9 +1,4 @@
 #pragma once
-#ifdef WITH_ANTIGO
-#include <exception>
-#include <iostream>
-#include "antigo/Context.h"
-#endif
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -126,21 +121,6 @@ private:
       throw std::runtime_error("Unhandled promise rejection");
     };
     bool pending = true;
-
-#ifdef WITH_ANTIGO
-    ~Impl() {
-      ANTIGO_CONTEXT_INIT(ctx);
-
-      if (pending) {
-        try {
-          ctx.AddMessage("PROMISE GONE");
-          ctx.Orphan();
-        } catch (const std::exception& e) {
-          std::cerr << "PROMISE GONE EXCEPTION " << e.what() << "\n";
-        }
-      }
-    }
-#endif
   };
 
   std::shared_ptr<Impl> pImpl = std::make_shared<Impl>();
