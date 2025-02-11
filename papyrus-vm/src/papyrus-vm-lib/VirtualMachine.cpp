@@ -4,6 +4,7 @@
 #include "papyrus-vm/Utils.h"
 #include <algorithm>
 #include <cassert>
+#include <exception>
 #include <fmt/format.h>
 #include <limits>
 #include <memory>
@@ -53,8 +54,15 @@ std::shared_ptr<StackData> StackData::Create(VirtualMachine& vm_) {
 StackData::StackData(VirtualMachine& vm_, InternalToken): stackIdHolder(vm_) {}
 
 StackData::~StackData() {
+  ANTIGO_CONTEXT_INIT(ctx);
   if (tracing.enabled) {
-    spdlog::info("TRACING PAPYRUS STACK {}-{}: DESTRUCTOR", stackIdHolder.GetStackId(), tracing.traceId);
+    std::string resolved;
+    try {
+      resolved = ctx.Resolve().ToString();
+    } catch (const std::exception& e) {
+      resolved = std::string{"unexpected error during resolving: "} + e.what();
+    }
+    spdlog::info("TRACING PAPYRUS STACK {}-{}: DESTRUCTOR\n{}", stackIdHolder.GetStackId(), tracing.traceId, resolved);
   }
 }
 
